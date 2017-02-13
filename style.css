@@ -1,0 +1,28 @@
+	
+.flexContainer {
+    display: flex;
+}
+
+.inputField {
+    flex: 1;
+}
+.form-group {
+	width: 100%;
+}
+#selector {
+	margin-left: 70px;
+}
+.modal-footer {
+	background-color: Black;
+}
+.modal-header {
+	background-color: #a8562d;
+	text-align: left;
+}
+h4 {
+	text-align: left;
+}
+body {
+	background-image: url("white.png")
+
+}

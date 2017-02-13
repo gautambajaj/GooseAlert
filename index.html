@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GooseWatch</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+  <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="action.js">
+    var pos;
+  </script>
+  <style>
+       #map {
+        height: 700px;
+        width: 100%;
+       }
+    </style>
+      <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYK6lfdDyX7XQWUDCJ_jVAgq2vaOe6iX0&libraries=geometry&callback=initMap">
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse">
+  <button class="navbar-toggler navbar-toggler-right" type="button">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <img src="uw.png" height="50px" width="220px">
+  <a class="navbar-brand" href="#"><h3> </h3></a>
+  <div style="margin-left: 300px;" class="wrapper">
+    <button id="all" type="button" class="btn btn-danger">Show All Nests</button>
+    <button id="near" type="button" class="btn btn-danger">Nests Around Me</button>
+    <button id="report" type="button" class="btn btn-danger">Report Nest</button>
+  </div>
+</nav>
+    <div id="map"></div>
+    <script>
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16,
+          center: new google.maps.LatLng(43.471,-80.547763)
+        });
+                var infoWindow = new google.maps.InfoWindow({map: map});
+
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            infoWindow.setPosition(pos);
+            infoWindow.setContent('Your Are Here');
+            map.setCenter(pos);
+          }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+          });
+        } 
+        $.ajax({
+         url: 'https://api.uwaterloo.ca/v2/resources/goosewatch.json?key=38b1c3c489d4d364e9fe24fba3d7c171',
+         data: {
+            format: 'json'
+         },
+         error: function() {
+            console.log("An error has occurred");
+         },
+         dataType: 'jsonp',
+         success: function(data) {
+          var coordinates = [];
+
+          $('#all').click(function () {
+           $.each(data["data"], function(key,value) {
+            coordinates.push({
+              latitude: value['latitude'],
+              longitude: value['longitude']
+            });
+           })
+        for(var i=0; i<coordinates.length; i++) {
+          var uluru = {lat: coordinates[i].latitude, lng: coordinates[i].longitude};
+          var marker = new google.maps.Marker({
+            position: uluru,
+            map: map,
+            animation: google.maps.Animation.DROP,
+            icon: new google.maps.MarkerImage( 'http://www.freeiconspng.com/uploads/goose-png-pictures-4.png', undefined, undefined, undefined, new google.maps.Size(30, 30))
+          }); 
+        }
+        });
+        $('#near').click(function() {
+          $.each(data["data"], function(key,value) {
+            coordinates.push({
+              latitude: value['latitude'],
+              longitude: value['longitude']
+            });
+           })
+        for(var i=0; i<coordinates.length; i++) {
+          var uluru = new google.maps.LatLng(coordinates[i].latitude, coordinates[i].longitude);
+          var _pCord = new google.maps.LatLng(pos['lat'],pos['lng']);
+          var dist = google.maps.geometry.spherical.computeDistanceBetween(uluru,_pCord);
+          if(dist<=150) {
+                      var marker = new google.maps.Marker({
+            position: uluru,
+            map: map,
+            animation: google.maps.Animation.DROP,
+            icon: new google.maps.MarkerImage( 'http://www.freeiconspng.com/uploads/goose-png-pictures-4.png', undefined, undefined, undefined, new google.maps.Size(30, 30))
+          }); 
+          }
+        }
+      });
+         },
+         type: 'GET'
+          });
+      }
+
+    </script>
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Report a Goose Nest</h4>
+      </div>
+      <div class="modal-body">
+            <div id="selector" class=" btn-group btn-lg btn-block">
+                <button type="button" class="btn btn-primary ">Use My location</button>
+                <button type="button" class="btn btn-secondary ">Click on Map</button>
+            </div>      
+                <div class="input-group">
+                  <span class="input-group-addon" id="basic-addon1"><i class="material-icons">room</i></span>
+                  <input type="text" class="form-control" placeholder="Location" aria-describedby="basic-addon1">
+                </div>
+                <br>
+                <div class="input-group">
+                  <span class="input-group-addon" id="basic-addon2"><i class="material-icons">feedback</i></span>
+                  <input type="text" class="form-control" placeholder="Description of Nest (e.g. SLC/Next to Tim Hortons)" aria-describedby="basic-addon2">
+                </div>
+                <br>
+                <div class="input-group">
+                  <span class="input-group-addon" id="basic-addon3"><i class="material-icons">face</i></span>
+                  <input type="text" class="form-control" id="basic-url" aria-describedby="Name (Optional)" placeholder="Name (Optional)">
+                </div>
+                <br>
+                <div class="input-group">
+                  <span class="input-group-addon" id="basic-addon4"><i class="material-icons">email</i></span>
+                  <input type="text" class="form-control" aria-label="Email (Optional)" placeholder="Email (Optional)">
+                </div>
+                <br>
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="material-icons">camera</i></span>
+                  <div class="flexContainer">
+                      <input type="text" class="form-control" aria-label="Email (Optional)" placeholder="No File Chosen">
+                      <button type="submit" alt="Arrow Icon">Upload Photo</button>
+                  </div>
+               </div>
+               <br>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button id="click1" type="button" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>
